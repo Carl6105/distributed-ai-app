@@ -34,6 +34,7 @@ try:
     # Load model with automatic device placement
     print(f"⏳ Loading model on {device}...")
     model = AutoModelForCausalLM.from_pretrained(AI_MODEL_NAME, torch_dtype=dtype, device_map="auto")
+    model.to(device)  # Ensure the model is explicitly moved to the device
     print("✅ Model loaded successfully!")
 except Exception as e:
     print(f"❌ Error loading model: {e}")
@@ -44,9 +45,13 @@ def generate_response(prompt: str):
     if model is None or tokenizer is None:
         return "❌ Model is not loaded."
 
-    inputs = tokenizer(prompt, return_tensors="pt").to(device)  # Move input to the correct device
-    with torch.no_grad():
-        outputs = model.generate(**inputs, max_length=500)
-    
-    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    return response
+    try:
+        inputs = tokenizer(prompt, return_tensors="pt").to(device)  # Move input to the correct device
+        with torch.no_grad():
+            outputs = model.generate(**inputs, max_length=500)
+
+        response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+        return response
+    except Exception as e:
+        print(f"⚠️ Error during inference: {e}")
+        return "❌ Error generating response."

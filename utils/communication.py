@@ -14,6 +14,11 @@ def send_task_to_worker(worker_address: str, prompt: str) -> str:
         str: The AI model's response.
     """
     try:
+        if not prompt.strip():
+            return "❌ Error: Empty prompt received."
+
+        print(f"📡 Sending request to worker at {worker_address}...")
+        
         # Connect to the worker node via gRPC
         with grpc.insecure_channel(worker_address) as channel:
             stub = WorkerServiceStub(channel)
@@ -22,8 +27,13 @@ def send_task_to_worker(worker_address: str, prompt: str) -> str:
             request = TaskRequest(prompt=prompt)
             response = stub.ProcessTask(request)
 
+            print("✅ Response received successfully!")
             return response.result
 
     except grpc.RpcError as e:
         print(f"❌ gRPC error: {e.code()} - {e.details()}")
-        return "Error: Unable to process request"
+        return f"Error: Unable to process request ({e.code()} - {e.details()})"
+
+    except Exception as e:
+        print(f"⚠️ Unexpected error: {e}")
+        return "Error: An unexpected issue occurred."
