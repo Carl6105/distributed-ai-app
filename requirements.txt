@@ -1,0 +1,7 @@
+torch
+transformers
+accelerate
+ray[default]
+fastapi
+uvicorn
+grpcio
